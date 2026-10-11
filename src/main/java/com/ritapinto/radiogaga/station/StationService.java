@@ -25,5 +25,10 @@ public class StationService {
     public Station findById(Long id) {
     return repository.findById(id)
             .orElseThrow(() -> new StationNotFoundException(id));
-}
+    }
+    
+    public void delete(Long id) {
+        findById(id);
+        repository.deleteById(id);
+    }
 }

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 @RestController
 @RequestMapping("/stations")
@@ -36,5 +37,11 @@ public class StationController {
         @ResponseStatus(HttpStatus.CREATED)
         public Station create(@Valid @RequestBody CreateStationRequest request) {
             return service.create(request);
+        }
+
+        @DeleteMapping("/{id}")
+        @ResponseStatus(HttpStatus.NO_CONTENT)
+        public void delete(@PathVariable Long id) {
+            service.delete(id);
         }
 }

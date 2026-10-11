@@ -15,6 +15,9 @@ public class Station {
     private String name;
     private String description;
 
+    protected Station() {
+    }
+
     public Station(String name, String description) {
     this.name = name;
     this.description = description;
