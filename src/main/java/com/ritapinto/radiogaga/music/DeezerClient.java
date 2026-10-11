@@ -33,11 +33,11 @@ public class DeezerClient {
                     .body(DeezerSearchResponse.class);
 
             if (response == null || response.data() == null) {
-                throw new MusicProviderException("Resposta inesperada da Deezer", null);
+                throw new MusicProviderException("Unexpected response from Deezer", null);
             }
             return response;
         } catch (RestClientException ex) {
-            throw new MusicProviderException("Falha ao contactar a Deezer", ex);
+            throw new MusicProviderException("Failed to contact Deezer", ex);
         }
     }
 }

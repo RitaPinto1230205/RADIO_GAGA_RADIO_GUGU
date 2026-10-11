@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail handleUnreadable(HttpMessageNotReadableException ex) {
         return ProblemDetail.forStatusAndDetail(
-                HttpStatus.BAD_REQUEST, "JSON inválido ou em falta");
+                HttpStatus.BAD_REQUEST, "Malformed request body");
     }
 
    @ExceptionHandler(Exception.class)
@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
         if (ex instanceof ErrorResponse errorResponse) {
             return errorResponse.getBody();
         }
-        log.error("Erro inesperado", ex);
+        log.error("Unexpected error", ex);
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR, "Ocorreu um erro inesperado");
     }
@@ -48,15 +48,15 @@ public class GlobalExceptionHandler {
                 .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
 
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.BAD_REQUEST, "Pedido inválido");
+                HttpStatus.BAD_REQUEST, "Invalid request body");
         problem.setProperty("errors", errors);
         return problem;
     }
 
     @ExceptionHandler(MusicProviderException.class)
     public ProblemDetail handleMusicProvider(MusicProviderException ex) {
-        log.warn("Falha no fornecedor de música", ex);
+        log.warn("Music provider error", ex);
         return ProblemDetail.forStatusAndDetail(
-                HttpStatus.BAD_GATEWAY, "O serviço de música está indisponível");
+                HttpStatus.BAD_GATEWAY, "The music service is unavailable");
     }
 }

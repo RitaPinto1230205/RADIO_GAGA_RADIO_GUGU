@@ -42,7 +42,7 @@ public class ApiKeyFilter extends OncePerRequestFilter {
             response.setContentType("application/problem+json");
             response.getWriter().write(
                     "{\"status\":401,\"title\":\"Unauthorized\","
-                    + "\"detail\":\"API key em falta ou inválida\"}");
+                    + "\"detail\":\"API key missing or invalid\"}");
             return;
         }
 
