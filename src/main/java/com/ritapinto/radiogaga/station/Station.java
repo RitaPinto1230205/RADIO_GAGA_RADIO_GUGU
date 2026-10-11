@@ -15,7 +15,9 @@ public class Station {
     private String name;
     private String description;
 
-    protected Station() {
+    public Station(String name, String description) {
+    this.name = name;
+    this.description = description;
     }
 
     public Long getId() { return id; }
@@ -25,4 +27,5 @@ public class Station {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
 }
