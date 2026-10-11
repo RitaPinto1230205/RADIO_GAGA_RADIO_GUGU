@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import com.ritapinto.radiogaga.station.StationNotFoundException;
+import org.springframework.web.ErrorResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -24,8 +25,11 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST, "JSON inválido ou em falta");
     }
 
-    @ExceptionHandler(Exception.class)
+   @ExceptionHandler(Exception.class)
     public ProblemDetail handleUnexpected(Exception ex) {
+        if (ex instanceof ErrorResponse errorResponse) {
+            return errorResponse.getBody();
+        }
         log.error("Erro inesperado", ex);
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR, "Ocorreu um erro inesperado");
