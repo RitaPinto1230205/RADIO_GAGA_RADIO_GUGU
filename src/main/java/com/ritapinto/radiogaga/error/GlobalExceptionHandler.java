@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import com.ritapinto.radiogaga.station.StationNotFoundException;
 import org.springframework.web.ErrorResponse;
+import com.ritapinto.radiogaga.music.MusicProviderException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -50,5 +51,12 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST, "Pedido inválido");
         problem.setProperty("errors", errors);
         return problem;
+    }
+
+    @ExceptionHandler(MusicProviderException.class)
+    public ProblemDetail handleMusicProvider(MusicProviderException ex) {
+        log.warn("Falha no fornecedor de música", ex);
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_GATEWAY, "O serviço de música está indisponível");
     }
 }
