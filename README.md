@@ -92,11 +92,18 @@ A request goes controller, service, repository. Controllers deal with HTTP only,
 - **Upstream failures are contained.** Calls to Deezer have timeouts, and any failure becomes a 502 instead of a hung request or a stack trace.
 - **No HTML injection from provider data.** The frontend renders track titles with `textContent`, never `innerHTML`.
 
+## Tests
+
+```bash
+./mvnw test
+```
+
+Integration tests start the full application and check the API key rules (401 without or with a wrong key, 201 with a valid one, public reads), input validation and the 404 response.
+
 ## Known limitations
 
 - A single shared API key, with no users or roles. The next step is moving authentication to Spring Security.
 - No rate limiting, and no maximum length on the search query.
-- No automated tests yet.
 - H2 in memory. A persistent database such as PostgreSQL is needed before any deployment, and the H2 console must stay disabled outside local development.
 - Stations do not hold their own tracks yet. Selecting a station searches by its name.
 - The level meters are a decorative animation, not a reading of the audio.

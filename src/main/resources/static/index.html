@@ -535,9 +535,23 @@
             color: var(--muted);
         }
 
+        .add-station {
+            margin: 16px 6px 0;
+            flex-wrap: wrap;
+            max-width: 640px;
+        }
+
+        .add-station input {
+            flex: 1 1 170px;
+        }
+
+        .console .status {
+            margin-top: 8px;
+        }
+
         @media (max-width: 860px) {
             .studio {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 1fr);
                 gap: 20px;
             }
 
@@ -616,7 +630,15 @@
         <section class="console card" aria-label="Stations">
             <h2>Stations</h2>
             <div class="strips" id="presets"></div>
-            <p id="presetsEmpty" hidden>No stations yet. Create one from the terminal, then reload this page.</p>
+            <p id="presetsEmpty" hidden>No stations yet. Add the first one below.</p>
+            <form class="search add-station" id="stationForm">
+                <input id="stationName" type="text" placeholder="Station name" aria-label="Station name" maxlength="100"
+                    required>
+                <input id="apiKey" type="password" placeholder="API key" aria-label="API key" autocomplete="off"
+                    required>
+                <button type="submit">Add station</button>
+            </form>
+            <p class="status" id="stationStatus" role="status"></p>
         </section>
     </main>
 
@@ -630,11 +652,18 @@
         let current = -1;
 
         // Talks to the backend. On error, shows the "detail" field of the ProblemDetail.
-        async function api(path) {
-            const response = await fetch(path);
+        async function api(path, options) {
+            const response = await fetch(path, options);
             if (!response.ok) {
                 let detail = "Something went wrong. Try again.";
-                try { detail = (await response.json()).detail || detail; } catch (e) { }
+                try {
+                    const problem = await response.json();
+                    detail = problem.detail || detail;
+                    if (problem.errors) {
+                        detail += " " + Object.entries(problem.errors)
+                            .map(([field, message]) => field + " " + message).join(", ") + ".";
+                    }
+                } catch (e) { }
                 throw new Error(detail);
             }
             return response.json();
@@ -774,43 +803,69 @@
         });
 
         // Each station is a mixer channel. For now, opening a channel searches tracks by its name.
+        function addStrip(station) {
+            const strip = document.createElement("button");
+            strip.type = "button";
+            strip.className = "strip";
+            strip.setAttribute("aria-pressed", "false");
+
+            const name = document.createElement("span");
+            name.className = "name";
+            name.textContent = station.name;
+
+            const slot = document.createElement("span");
+            slot.className = "slot";
+            const knob = document.createElement("span");
+            knob.className = "knob";
+            slot.append(knob);
+
+            const lamp = document.createElement("span");
+            lamp.className = "lamp";
+
+            strip.append(name, slot, lamp);
+            strip.addEventListener("click", () => {
+                document.querySelectorAll(".strip")
+                    .forEach((other) => other.setAttribute("aria-pressed", String(other === strip)));
+                $("q").value = station.name;
+                search(station.name);
+            });
+            $("presets").append(strip);
+            $("presetsEmpty").hidden = true;
+        }
+
         async function loadStations() {
             try {
                 const stations = await api("/stations");
                 $("presetsEmpty").hidden = stations.length > 0;
-                stations.forEach((station) => {
-                    const strip = document.createElement("button");
-                    strip.type = "button";
-                    strip.className = "strip";
-                    strip.setAttribute("aria-pressed", "false");
-
-                    const name = document.createElement("span");
-                    name.className = "name";
-                    name.textContent = station.name;
-
-                    const slot = document.createElement("span");
-                    slot.className = "slot";
-                    const knob = document.createElement("span");
-                    knob.className = "knob";
-                    slot.append(knob);
-
-                    const lamp = document.createElement("span");
-                    lamp.className = "lamp";
-
-                    strip.append(name, slot, lamp);
-                    strip.addEventListener("click", () => {
-                        document.querySelectorAll(".strip")
-                            .forEach((other) => other.setAttribute("aria-pressed", String(other === strip)));
-                        $("q").value = station.name;
-                        search(station.name);
-                    });
-                    $("presets").append(strip);
-                });
+                stations.forEach(addStrip);
             } catch (error) {
                 $("presetsEmpty").textContent = error.message;
                 $("presetsEmpty").hidden = false;
             }
         }
+
+        // The API key is typed by the person, never written in this file.
+        // It is kept for this browser tab only, so it is gone when the tab closes.
+        const KEY_STORAGE = "radiogaga.apiKey";
+        try { $("apiKey").value = sessionStorage.getItem(KEY_STORAGE) || ""; } catch (e) { }
+
+        $("stationForm").addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const key = $("apiKey").value;
+            try {
+                const station = await api("/stations", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-API-Key": key },
+                    body: JSON.stringify({ name: $("stationName").value.trim() })
+                });
+                addStrip(station);
+                $("stationName").value = "";
+                $("stationStatus").textContent = "Added “" + station.name + "”.";
+                try { sessionStorage.setItem(KEY_STORAGE, key); } catch (e) { }
+            } catch (error) {
+                $("stationStatus").textContent = error.message;
+            }
+        });
 
         loadStations();
         $("q").value = "Queen";
